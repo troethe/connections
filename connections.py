@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from collections import defaultdict
 from enum import Enum
 from itertools import islice
+import argparse
 
 from combinatorics import labeled_balls_in_unlabeled_boxes
 
@@ -139,9 +140,18 @@ def has_winning_strat(state: State, n_tries: int = 4) -> bool:
     return False
 
 
-# Move(frozenset(islice(slots, 4)), Result.OFF_BY_ONE)
 if __name__ == "__main__":
-    slots = Slot.create_n(9)
-    params = GameParams(slots, GROUP_SIZE=3)
+    parser = argparse.ArgumentParser(
+        description='Checks wether there is a winning strategy given a certain state of a game of "Connections"'
+    )
+    parser.add_argument("-s", "--slots", type=int, default=8)
+    parser.add_argument("-t", "--tries", type=int, default=4)
+    args = parser.parse_args()
+
+    slots = Slot.create_n(args.slots)
+    params = GameParams(slots, GROUP_SIZE=4)
     start_state = State(params, moves=[])
-    print(has_winning_strat(start_state, n_tries=4))
+    if has_winning_strat(start_state, n_tries=args.tries):
+        print("There is a winning strategy! 🥳")
+    else:
+        print("There is no winning strategy. 🫤")
