@@ -1,10 +1,12 @@
-""" combinatorics.py
+"""
+combinatorics.py
 
 OVERVIEW
 ========
 
-This module was created to supplement Python's itertools module, filling in gaps
-in the following areas of basic combinatorics:
+
+This package was created to supplement the Python Standard Library's `itertools`
+package, filling in gaps in the following areas of basic combinatorics:
 
 (A) ordered and unordered m-way combinations,
 
@@ -12,9 +14,9 @@ in the following areas of basic combinatorics:
 
 (C) constrained permutations, otherwise known as the 'off-by-m' problem.
 
-Brief descriptions of the included functions and classes follow (more detailed
-descriptions and additional examples can be found in the individual doc strings
-within the functions):
+Brief descriptions of the included functions follow (more detailed descriptions
+and additional examples can be found in the individual doc strings within the
+functions):
 
 n_choose_m(n, m): calculate n-choose-m, using a simple algorithm that is less
 likely to involve large integers than the direct evaluation of n! / m! / (n-m)!
@@ -189,6 +191,11 @@ REVISION HISTORY
 ================
 
 
+02-10-2018, version 1.4.6, Phillip M. Feldman:
+
+(minor) For compatibility with Python 3.X, I replaced `xrange` by `range`.
+
+
 02-07-2015, version 1.4.5, Phillip M. Feldman:
 
 (minor) I fixed a bug in `m_way_unordered_combinations` that was causing the
@@ -318,8 +325,8 @@ def prod(seq):
    `prod` function defined in this module uses large integer arithmetic and thus
    always gives correct results.
 
-
-   EXAMPLE
+   The following sample input/output compares `numpy.prod` and
+   `combinatorics.prod`:
 
    In [1]: prod(range(1,11))
    Out[1]: 3628800
@@ -347,7 +354,8 @@ def n_choose_m(n, m):
 
    This function calculates choose(n,m), defined as the number of ways in which
    one can select m of n distinct objects without regard for order.  The
-   function uses only integer arithmetic:
+   function uses the following simple algorithm, which involves only integer
+   arithmetic:
 
    1. If m > n-m, we replace m by n-m.
 
@@ -392,17 +400,16 @@ def n_choose_m_ln(n, m):
    """
    OVERVIEW
 
-   This function calculates the natural logarithm of choose(n,m), defined as the
-   number of ways in which one can select m of n distinct objects without regard
-   for order, using SciPy's `gammaln` function.  For large n, especially for
-   n > 10000, this function is much faster than `n_choose_m` (computational and
-   memory requirements are both much lower).
+   This function calculates the natural logarithm of choose(n, m), where
+   choose(n, m) is defined as the number of ways in which one can select m of n
+   distinct objects without regard for order.  The calculation is done using
+   SciPy's `gammaln` function.  For large n, especially for n > 10000, this
+   function is much faster than `n_choose_m` (computational and memory
+   requirements are both much lower).  To obtain a value for choose(n,m), apply
+   the `exp` function to the result returned by this function.
 
 
    NOTE
-
-   To obtain a value for choose(n,m), apply the `exp` function to the result
-   returned by this function.
 
    This function works for huge values of `n`, but applying `exp` to the return
    value may produce an overflow.
@@ -456,6 +463,11 @@ def m_way_ordered_combinations(items, ks):
 
    where n is the number of items, m is the number of groups, and k_i is the
    number of items in the ith group.
+
+
+   REFERENCES
+
+   1. http://en.wikipedia.org/wiki/Multinomial_theorem#Multinomial_coefficients
    """
    if isinstance(items, int):
       items= range(items)
@@ -471,6 +483,10 @@ def m_way_ordered_combinations(items, ks):
 
 
 def _m_way_ordered_combinations(items, ks):
+   """
+   This generator function is intended for internal use only, as is indicated by
+   the leading underscore in the name.
+   """
 
    if len(ks) == 1:
       for c in itertools.combinations(items, ks[0]):
@@ -564,9 +580,10 @@ def m_way_unordered_combinations(items, ks):
 
 def _m_way_unordered_combinations(items, ks):
    """
-   This recursive generator function does the real work of generating unordered
-   combinations.  See the doc string for the `m_way_unordered_combinations`
-   above.
+   This recursive generator function, which does the real work of generating
+   unordered combinations, is intended for internal use only, as is indicated by
+   the leading underscore in the name.  See the doc string for the
+   `m_way_unordered_combinations` above.
    """
 
    if not any(ks[1:]):
@@ -614,15 +631,15 @@ def unlabeled_balls_in_labeled_boxes(balls, box_sizes):
    called 'weak composition' problems.
 
 
-   CONSTRUCTOR INPUTS
+   INPUT ARGUMENTS
 
-   n: the number of balls
+   `balls` is the total number of balls.
 
-   box_sizes: This argument is a list of length 1 or greater.  The length of
-   the list corresponds to the number of boxes.  `box_sizes[i]` is a positive
-   integer that specifies the maximum capacity of the ith box.  If
-   `box_sizes[i]` equals `n` (or greater), the ith box can accommodate all `n`
-   balls and thus effectively has unlimited capacity.
+   `box_sizes` is a list of length 1 or greater.  The length of the list
+   corresponds to the number of boxes.  `box_sizes[i]` is a positive integer
+   that specifies the maximum capacity of the ith box.  If `box_sizes[i]` equals
+   `n` (or greater), the ith box can accommodate all `n` balls and thus
+   effectively has unlimited capacity.
 
 
    ACKNOWLEDGMENT
@@ -655,7 +672,8 @@ def unlabeled_balls_in_labeled_boxes(balls, box_sizes):
 
 def _unlabeled_balls_in_labeled_boxes(balls, box_sizes):
    """
-   This recursive generator function was designed to be returned by
+   This recursive generator function, which is intended for internal use only,
+   as indicated by the leading underscore in the name, is invoked by
    `unlabeled_balls_in_labeled_boxes`.
    """
 
@@ -703,15 +721,15 @@ def unlabeled_balls_in_unlabeled_boxes(balls, box_sizes):
    distributed, the identities of the boxes no longer matter.
 
 
-   CONSTRUCTOR INPUTS
+   INPUT ARGUMENTS
 
-   n: the number of balls
+   `balls` is the total number of balls.
 
-   box_sizes: This argument is a list of length 1 or greater.  The length of
-   the list corresponds to the number of boxes.  `box_sizes[i]` is a positive
-   integer that specifies the maximum capacity of the ith box.  If
-   `box_sizes[i]` equals `n` (or greater), the ith box can accommodate all `n`
-   balls and thus effectively has unlimited capacity.
+   `box_sizes` is a list of length 1 or greater.  The length of the list
+   corresponds to the number of boxes.  `box_sizes[i]` is a positive integer
+   that specifies the maximum capacity of the ith box.  If `box_sizes[i]` equals
+   `n` (or greater), the ith box can accommodate all `n` balls and thus
+   effectively has unlimited capacity.
 
 
    NOTE
@@ -750,7 +768,8 @@ def unlabeled_balls_in_unlabeled_boxes(balls, box_sizes):
 
 def _unlabeled_balls_in_unlabeled_boxes(balls, box_sizes):
    """
-   This recursive generator function was designed to be returned by
+   This recursive generator function, which is intended for internal use only,
+   as indicated by the leading underscore in the name, is invoked by
    `unlabeled_balls_in_unlabeled_boxes`.
    """
 
@@ -804,15 +823,15 @@ def labeled_balls_in_unlabeled_boxes(balls, box_sizes):
    distributed, the identities of the boxes no longer matter.
 
 
-   CONSTRUCTOR INPUTS
+   INPUT ARGUMENTS
 
-   n: the number of balls
+   `balls` is the total number of balls.
 
-   box_sizes: This argument is a list of length 1 or greater.  The length of
-   the list corresponds to the number of boxes.  `box_sizes[i]` is a positive
-   integer that specifies the maximum capacity of the ith box.  If
-   `box_sizes[i]` equals `n` (or greater), the ith box can accommodate all `n`
-   balls and thus effectively has unlimited capacity.
+   `box_sizes` is a list of length 1 or greater.  The length of the list
+   corresponds to the number of boxes.  `box_sizes[i]` is a positive integer
+   that specifies the maximum capacity of the ith box.  If `box_sizes[i]` equals
+   `n` (or greater), the ith box can accommodate all `n` balls and thus
+   effectively has unlimited capacity.
 
 
    NOTE
@@ -860,15 +879,15 @@ def labeled_balls_in_labeled_boxes(balls, box_sizes):
    balls.
 
 
-   CONSTRUCTOR INPUTS
+   INPUT ARGUMENTS
 
-   n: the number of balls
+   `balls` is the total number of balls.
 
-   box_sizes: This argument is a list of length 1 or greater.  The length of
-   the list corresponds to the number of boxes.  `box_sizes[i]` is a positive
-   integer that specifies the maximum capacity of the ith box.  If
-   `box_sizes[i]` equals `n` (or greater), the ith box can accommodate all `n`
-   balls and thus effectively has unlimited capacity.
+   `box_sizes` is a list of length 1 or greater.  The length of the list
+   corresponds to the number of boxes.  `box_sizes[i]` is a positive integer
+   that specifies the maximum capacity of the ith box.  If `box_sizes[i]` equals
+   `n` (or greater), the ith box can accommodate all `n` balls and thus
+   effectively has unlimited capacity.
 
 
    EXAMPLE
@@ -958,8 +977,9 @@ def off_by_one(n):
    as follows:
 
       A list of n items is provided.  Each item is in its correct position, or
-      one before or one after its correct position.  Enumerate all possibilities
-      for the correct ordering.
+      one before or one after its correct position.  (The first item cannot be
+      before its correct position, and the last item cannot be after its correct
+      position).  Enumerate all possibilities for the correct ordering.
 
 
    EXAMPLE
@@ -990,7 +1010,8 @@ def off_by_one(n):
 
 def _off_by_one(Seq):
    """
-   This recursive generator function was designed to be returned by
+   This recursive generator function, which is intended for internal use only,
+   as indicated by the leading underscore in the name, is invoked by
    `off_by_one`.
    """
 
@@ -1024,7 +1045,7 @@ def off_by_m_algorithm1(n, m):
       (Conceptually, changing one order to another is done by exchanging
       elements pairwise; any number of such exchanges may be performed; we care
       only about the initial and final lists--not the sequence of operations
-      that transformed one into the other).
+      that transformed one list into the other).
    """
 
    # 1. Build up list of lists of possible positions for the elements of the
@@ -1086,7 +1107,20 @@ def off_by_m_algorithm3(n, m, seq=None, i=0):
       (Conceptually, changing one order to another is done by exchanging
       elements pairwise; any number of such exchanges may be performed; we care
       only about the initial and final lists--not the sequence of operations
-      that transformed one into the other).
+      that transformed one list into the other).
+
+
+   INPUT ARGUMENTS
+
+   `n` is the length of the entire sequence.
+
+   `m` is the number of positions by which any item is allowed to be moved
+   relative to its original position.
+
+   `seq` is the sequence of items that can be rearranged.
+
+   `i` is a parameter that is used only when the function calls itself
+   recursively.
    """
 
    if i == 0:
