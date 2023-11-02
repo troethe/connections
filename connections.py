@@ -97,7 +97,8 @@ class State:
             frozenset(self.params.slots)
         }
         basis = self.smallest_basis(prev_selections)
-        return self._get_possible_selections(list(basis), self.params.GROUP_SIZE)
+        possible_selections = self._get_possible_selections(list(basis), self.params.GROUP_SIZE)
+        return (selection for selection in possible_selections if not selection in prev_selections)
 
     def possible_solutions(self) -> Iterator[Solution]:
         n_slots = len(self.params.slots)
@@ -122,7 +123,8 @@ class State:
 
 
 def has_winning_strat(state: State, n_tries: int = 4) -> bool:
-    if any(s.result == Result.CORRECT for s in state.moves):
+    n_groups = len(state.params.slots) // state.params.GROUP_SIZE
+    if sum(s.result == Result.CORRECT for s in state.moves) == n_groups:
         return True
     if n_tries == 0:
         return False
@@ -132,7 +134,12 @@ def has_winning_strat(state: State, n_tries: int = 4) -> bool:
             move = Move(selection, result)
             next_state = State(state.params, state.moves + [move])
 
-            if not has_winning_strat(next_state, n_tries - 1):
+            if result == Result.CORRECT:
+                has_winning = has_winning_strat(next_state, n_tries)
+            else:
+                has_winning = has_winning_strat(next_state, n_tries - 1)
+
+            if not has_winning:
                 break
         else:
             return True
