@@ -39,5 +39,8 @@ def test_possible_selections() -> None:
     moves += [Move(frozenset(slots[0:4]), Result.OFF_BY_MORE)]
     state = State(params, moves)
     selects = list(state.get_possible_selections())
-    assert len(selects) == 5
+
+    # There are 5 ways to pick 4 elements from two groups of 4.
+    # One of them has been selected already however, so it is excluded.
+    assert len(selects) == 4
     assert all(len(s) == 4 for s in selects), "Not all sets have the correct length"
