@@ -1,4 +1,4 @@
-# Connections
+# Winning Connections
 
 This is a small python module to check if a player at a given point in a game
 of [Connections](https://www.nytimes.com/games/connections) has a winning

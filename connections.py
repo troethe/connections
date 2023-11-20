@@ -9,6 +9,11 @@ from combinatorics import labeled_balls_in_unlabeled_boxes
 
 
 class Slot(int):
+    """A slot (square) in a game.
+
+    A thin wrapper around the built-in `int` to allow for more
+    expressive type-hinting"""
+
     @classmethod
     def from_int(cls, i: int) -> "Slot":
         return cls(i)
@@ -19,6 +24,8 @@ class Slot(int):
 
 
 class Result(Enum):
+    """The possible results/feedbacks a move can have."""
+
     OFF_BY_MORE = 0
     OFF_BY_ONE = 1
     CORRECT = 3
@@ -26,18 +33,29 @@ class Result(Enum):
 
 @dataclass
 class Move:
+    """A selection of slots together with its result."""
+
     selection: FrozenSet[Slot]
     result: Result
 
 
 @dataclass
 class GameParams:
+    """Invariant properties of a game."""
+
     slots: List[Slot]
     GROUP_SIZE: int = 4
 
 
 @dataclass
 class Solution:
+    """A solution to a game.
+
+    `groupings` is a tuple of tuples of slots s.t.:
+        1. Two slots are in the same tuple iff they belong to the same group
+        2. Every slot is present in exactly one tuple.
+    """
+
     groupings: Tuple[Tuple[Slot]]
     params: GameParams
 
@@ -56,10 +74,15 @@ class Solution:
 
 @dataclass
 class State:
+    """The state a game can be in.
+
+    Stores the general parameters of the game and the moves played so far.
+    """
+
     params: GameParams
     moves: List[Move]
 
-    def smallest_basis(self, sets: Set[FrozenSet[Slot]]) -> Set[FrozenSet[Slot]]:
+    def _smallest_basis(self, sets: Set[FrozenSet[Slot]]) -> Set[FrozenSet[Slot]]:
         participates_in: defaultdict[Slot, FrozenSet[FrozenSet[Slot]]] = defaultdict(
             lambda: frozenset()
         )
@@ -93,14 +116,35 @@ class State:
                 yield selection | further_selection
 
     def get_possible_selections(self) -> Iterator[FrozenSet[Slot]]:
+        """Returns an iterator over a subset of possible selections with some
+        redundancies removed"
+
+        One can group all slots by which previous selections they were a part
+        of, having two slots being part of the same group iff they were part of
+        exactly the same selections in previous moves.
+        The elements in one of these groups can be seen as indistinguishable
+        from each other, since the only information known of them in this model
+        of the game stems from previous moves.
+        This method then returns all possible selections when treating the elements from
+        each of these groups as indistinguishable.
+        It also filters out selections that have been made already in previous
+        moves.
+        """
         prev_selections = {m.selection for m in self.moves} | {
             frozenset(self.params.slots)
         }
-        basis = self.smallest_basis(prev_selections)
-        possible_selections = self._get_possible_selections(list(basis), self.params.GROUP_SIZE)
-        return (selection for selection in possible_selections if not selection in prev_selections)
+        basis = self._smallest_basis(prev_selections)
+        possible_selections = self._get_possible_selections(
+            list(basis), self.params.GROUP_SIZE
+        )
+        return (
+            selection
+            for selection in possible_selections
+            if not selection in prev_selections
+        )
 
     def possible_solutions(self) -> Iterator[Solution]:
+        """Returns an iterator that of all solutions that are still possible"""
         n_slots = len(self.params.slots)
         n_groups = n_slots // self.params.GROUP_SIZE
         group_sizes = [self.params.GROUP_SIZE] * n_groups
@@ -115,6 +159,7 @@ class State:
                 yield solution
 
     def get_possible_results(self, selection: FrozenSet[Slot]) -> List[Result]:
+        """Returns a list of results that are still possible for a given selection"""
         result_counts: defaultdict[Result, int] = defaultdict(lambda: 0)
         for solution in self.possible_solutions():
             result_counts[solution.result_for_move(selection)] += 1
@@ -123,6 +168,16 @@ class State:
 
 
 def has_winning_strat(state: State, n_tries: int = 4) -> bool:
+    """
+    Returns a boolean signaling if a given state has a winning
+    strategy when allowing for a given number of errors.
+
+    Arguments:
+    state: The starting state
+
+    Keyword Arguments:
+    n_tries: The number of permissible errors
+    """
     n_groups = len(state.params.slots) // state.params.GROUP_SIZE
     if sum(s.result == Result.CORRECT for s in state.moves) == n_groups:
         return True
@@ -149,7 +204,7 @@ def has_winning_strat(state: State, n_tries: int = 4) -> bool:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description='Checks wether there is a winning strategy given a certain state of a game of "Connections"'
+        description='Checks whether there is a winning strategy given a certain state of a game of "Connections"'
     )
     parser.add_argument("-s", "--slots", type=int, default=8)
     parser.add_argument("-t", "--tries", type=int, default=4)

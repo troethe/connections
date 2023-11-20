@@ -9,7 +9,7 @@ def test_basis() -> None:
     state = State(params, moves)
 
     sets = {frozenset(slots[0:4]), frozenset(slots)}
-    basis = state.smallest_basis(sets)
+    basis = state._smallest_basis(sets)
 
     assert all(len(b0 & b1) == 0 for b0 in basis for b1 in basis if b0 != b1), f"Not all elements in {basis} are disjoint"
     
